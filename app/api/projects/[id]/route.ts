@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     const project = await prisma.project.findUnique({
-      where: { id: params.id }
+      where: { id }
     })
     if (!project) {
       return NextResponse.json({ success: false, error: 'Project not found' }, { status: 404 })
@@ -15,13 +16,14 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     const body = await req.json()
     
     // Check if project exists
     const projectExists = await prisma.project.findUnique({
-      where: { id: params.id }
+      where: { id }
     })
     if (!projectExists) {
       return NextResponse.json({ success: false, error: 'Project not found' }, { status: 404 })
@@ -38,7 +40,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     }
 
     const project = await prisma.project.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData
     })
     return NextResponse.json({ success: true, data: project })
@@ -47,18 +49,19 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     // Check if project exists
     const projectExists = await prisma.project.findUnique({
-      where: { id: params.id }
+      where: { id }
     })
     if (!projectExists) {
       return NextResponse.json({ success: false, error: 'Project not found' }, { status: 404 })
     }
 
     await prisma.project.delete({
-      where: { id: params.id }
+      where: { id }
     })
     return NextResponse.json({ success: true, message: 'Project deleted' })
   } catch (error: any) {

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     const article = await prisma.article.findUnique({
-      where: { id: params.id }
+      where: { id }
     })
     if (!article) {
       return NextResponse.json({ success: false, error: 'Article not found' }, { status: 404 })
@@ -15,13 +16,14 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     const body = await req.json()
     
     // Check if article exists
     const articleExists = await prisma.article.findUnique({
-      where: { id: params.id }
+      where: { id }
     })
     if (!articleExists) {
       return NextResponse.json({ success: false, error: 'Article not found' }, { status: 404 })
@@ -38,7 +40,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     }
 
     const article = await prisma.article.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData
     })
     return NextResponse.json({ success: true, data: article })
@@ -47,17 +49,18 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     // Check if article exists
     const articleExists = await prisma.article.findUnique({
-      where: { id: params.id }
+      where: { id }
     })
     if (!articleExists) {
       return NextResponse.json({ success: false, error: 'Article not found' }, { status: 404 })
     }
 
-    await prisma.article.delete({ where: { id: params.id } })
+    await prisma.article.delete({ where: { id } })
     return NextResponse.json({ success: true, message: 'Article deleted' })
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
