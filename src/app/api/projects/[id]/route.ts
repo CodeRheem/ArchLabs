@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { withAuth } from '@/lib/middleware'
+import { requireAuth } from '@/lib/middleware'
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -16,9 +16,14 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export const PUT = withAuth(async (req: NextRequest, context: any, admin: any) => {
+export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+  // Check authentication
+  const authError = await requireAuth(req)
+  if (authError) {
+    return authError
+  }
+
   try {
-    const { params } = context
     const body = await req.json()
     
     const project = await prisma.project.update({
@@ -29,15 +34,19 @@ export const PUT = withAuth(async (req: NextRequest, context: any, admin: any) =
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }
-})
+}
 
-export const DELETE = withAuth(async (req: NextRequest, context: any, admin: any) => {
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+  // Check authentication
+  const authError = await requireAuth(req)
+  if (authError) {
+    return authError
+  }
+
   try {
-    const { params } = context
-    
     await prisma.project.delete({ where: { id: params.id } })
     return NextResponse.json({ success: true, message: 'Project deleted' })
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }
-})
+}

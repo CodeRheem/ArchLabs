@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { withAuth } from '@/lib/middleware'
+import { requireAuth } from '@/lib/middleware'
 
 export async function GET() {
   try {
@@ -14,7 +14,16 @@ export async function GET() {
   }
 }
 
-export const POST = withAuth(async (req: NextRequest, context: any, admin: any) => {
+export async function POST(req: NextRequest) {
+  console.log('[POST /api/projects] Handler called')
+  // Check authentication
+  const authError = await requireAuth(req)
+  console.log('[POST /api/projects] Auth result:', !!authError)
+  if (authError) {
+    console.log('[POST /api/projects] Returning 401')
+    return authError
+  }
+
   try {
     const body = await req.json()
     
@@ -37,4 +46,4 @@ export const POST = withAuth(async (req: NextRequest, context: any, admin: any) 
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }
-})
+}
