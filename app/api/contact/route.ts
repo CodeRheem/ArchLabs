@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAuth } from '@/lib/middleware'
 
 // Email validation regex
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  // Check authentication
+  const authError = await requireAuth(req)
+  if (authError) {
+    return authError
+  }
+
   try {
-    // TODO: Add authentication check here to protect sensitive data
     const messages = await prisma.message.findMany({
       orderBy: { createdAt: 'desc' },
       take: 100 // Limit to prevent excessive data loads

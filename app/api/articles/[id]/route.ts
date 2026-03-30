@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAuth } from '@/lib/middleware'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -17,6 +18,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  // Check authentication
+  const authError = await requireAuth(req)
+  if (authError) {
+    return authError
+  }
+
   try {
     const { id } = await params
     const body = await req.json()
@@ -50,6 +57,12 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  // Check authentication
+  const authError = await requireAuth(req)
+  if (authError) {
+    return authError
+  }
+
   try {
     const { id } = await params
     // Check if article exists
