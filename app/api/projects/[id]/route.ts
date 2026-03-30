@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAuth } from '@/lib/middleware'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -17,6 +18,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const authError = await requireAuth(req)
+  if (authError) {
+    return authError
+  }
+
   try {
     const { id } = await params
     const body = await req.json()
@@ -39,6 +45,14 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       }
     }
 
+    // Generate slug from title if title is being updated
+    if (body.title) {
+      updateData.slug = body.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '')
+    }
+
     const project = await prisma.project.update({
       where: { id },
       data: updateData
@@ -50,16 +64,13 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const authError = await requireAuth(req)
+  if (authError) {
+    return authError
+  }
+
   try {
     const { id } = await params
-    // Check if project exists
-    const projectExists = await prisma.project.findUnique({
-      where: { id }
-    })
-    if (!projectExists) {
-      return NextResponse.json({ success: false, error: 'Project not found' }, { status: 404 })
-    }
-
     await prisma.project.delete({
       where: { id }
     })
